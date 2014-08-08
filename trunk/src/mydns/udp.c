@@ -36,55 +36,55 @@ extern int	num_udp6_fd;			/* Number of listening FD's (IPv6) */
 **************************************************************************************************/
 taskexec_t
 read_udp_query(int fd, int family) {
-  struct sockaddr_storage	addr;
-  char			in[DNS_MAXPACKETLEN_UDP];
-  socklen_t 		addrlen = 0;
-  int			len = 0;
-  TASK			*t = NULL;
-  taskexec_t		rv = TASK_FAILED;
+	struct sockaddr_storage	addr;
+	char			in[DNS_MAXPACKETLEN_UDP];
+	socklen_t 		addrlen = 0;
+	int			len = 0;
+	TASK			*t = NULL;
+	taskexec_t		rv = TASK_FAILED;
 
-  memset(&addr, 0, sizeof(addr));
-  memset(&in, 0, sizeof(in));
-    
-  /* Read message */
-  if (family == AF_INET) {
-    addrlen = sizeof(struct sockaddr_in);
+	memset(&addr, 0, sizeof(addr));
+	memset(&in, 0, sizeof(in));
+		
+	/* Read message */
+	if (family == AF_INET) {
+		addrlen = sizeof(struct sockaddr_in);
 #if HAVE_IPV6
-  } else if (family == AF_INET6) {
-    addrlen = sizeof(struct sockaddr_in6);
+	} else if (family == AF_INET6) {
+		addrlen = sizeof(struct sockaddr_in6);
 #endif
-  }
+	}
 
-  if ((len = recvfrom(fd, &in, sizeof(in), 0, (struct sockaddr *)&addr, &addrlen)) < 0) {
-    if (
-	(errno == EINTR)
+	if ((len = recvfrom(fd, &in, sizeof(in), 0, (struct sockaddr *)&addr, &addrlen)) < 0) {
+		if ((errno == EINTR)
 #ifdef EAGAIN
-	|| (errno == EAGAIN)
+			|| (errno == EAGAIN)
 #else
 #ifdef EWOULDBLOCK
-	|| (errno == EWOULDBLOCK)
+			|| (errno == EWOULDBLOCK)
 #endif
 #endif
-	) {
-      return (TASK_CONTINUE);
-    }
-    return Warn("%s", _("recvfrom (UDP)"));
-  }
-  if (len == 0) {
-    return (TASK_FAILED);
-  }
-  if (!(t = IOtask_init(HIGH_PRIORITY_TASK, NEED_ANSWER, fd, SOCK_DGRAM, family, &addr)))
-    return (TASK_FAILED);
+		) {
+			return (TASK_CONTINUE);
+		}
+		return Warn("%s", _("recvfrom (UDP)"));
+	}
+	if (len == 0) {
+		return (TASK_FAILED);
+	}
+	if (!(t = IOtask_init(HIGH_PRIORITY_TASK, NEED_ANSWER, fd, SOCK_DGRAM, family, &addr))) {
+		return (TASK_FAILED);
+	}
 
 #if DEBUG_ENABLED && DEBUG_UDP
-  DebugX("udp", 1, "%s: %d %s", clientaddr(t), len, _("UDP octets in"));
+	DebugX("udp", 1, "%s: %d %s", clientaddr(t), len, _("UDP octets in"));
 #endif
-  rv = task_new(t, (unsigned char*)in, len);
-  if (rv < TASK_FAILED) {
-    dequeue(t);
-    rv = TASK_FAILED;
-  }
-  return rv;
+	rv = task_new(t, (unsigned char*)in, len);
+	if (rv < TASK_FAILED) {
+		dequeue(t);
+		rv = TASK_FAILED;
+	}
+	return rv;
 }
 /*--- read_udp_query() --------------------------------------------------------------------------*/
 
@@ -94,102 +94,98 @@ read_udp_query(int fd, int family) {
 **************************************************************************************************/
 taskexec_t
 write_udp_reply(TASK *t) {
-  int			rv = 0;
-  struct sockaddr	*addr = NULL;
-  int			addrlen = 0;
+	int			rv = 0;
+	struct sockaddr	*addr = NULL;
+	int			addrlen = 0;
 
-  if (t->family == AF_INET) {
-    addr = (struct sockaddr*)&t->addr4;
-    addrlen = sizeof(struct sockaddr_in);
+	if (t->family == AF_INET) {
+		addr = (struct sockaddr*)&t->addr4;
+		addrlen = sizeof(struct sockaddr_in);
 #if HAVE_IPV6
-  } else if (t->family == AF_INET6) {
-    addr = (struct sockaddr*)&t->addr6;
-    addrlen = sizeof(struct sockaddr_in6);
+	} else if (t->family == AF_INET6) {
+		addr = (struct sockaddr*)&t->addr6;
+		addrlen = sizeof(struct sockaddr_in6);
 #endif
-  }
+	}
 	
-  rv = sendto(t->fd, t->reply, t->replylen, 0, addr, addrlen);
+	rv = sendto(t->fd, t->reply, t->replylen, 0, addr, addrlen);
 
-  if (rv < 0) {
-    if (
-	(errno == EINTR)
+	if (rv < 0) {
+		if ((errno == EINTR)
 #ifdef EAGAIN
-	|| (errno == EAGAIN)
+			|| (errno == EAGAIN)
 #else
 #ifdef EWOULDBLOCK
-	|| (errno == EWOULDBLOCK)
+			|| (errno == EWOULDBLOCK)
 #endif
 #endif
-	) {
-      return (TASK_CONTINUE); /* Try again */
-    }
-    if (errno != EPERM && errno != EINVAL)
-      Warn("%s: %s", desctask(t), _("sendto (UDP)"));
-    return (TASK_FAILED);
-  }
+		) {
+			return (TASK_CONTINUE); /* Try again */
+		}
+		if (errno != EPERM && errno != EINVAL) {
+			Warn("%s: %s", desctask(t), _("sendto (UDP)"));
+		}
+		return (TASK_FAILED);
+	}
 
-  if (rv == 0) {
-    /*
-     * Should never happen as this implies the "other" end has closed the socket
-     * and we do not have another end - this is UDP
-     * However, we get this return when a route to the client does not exist
-     * this happens over WAN connection and VPN connections that flap
-     * so try again and see if the connection returns - this is going to
-     * make the process run continuously ....
-     */
-    return (TASK_EXECUTED);
-    /* Err("%s: Send to (UDP) returned 0", desctask(t)); */
-  }
+	if (rv == 0) {
+		/*
+		* Should never happen as this implies the "other" end has closed the socket
+		* and we do not have another end - this is UDP
+		* However, we get this return when a route to the client does not exist
+		* this happens over WAN connection and VPN connections that flap
+		* so try again and see if the connection returns - this is going to
+		* make the process run continuously ....
+		*/
+		return (TASK_EXECUTED);
+		/* Err("%s: Send to (UDP) returned 0", desctask(t)); */
+	}
 
-  if (rv != (int)t->replylen) {
-    /*
-     * This should never ever happen as we have sent a partial packet over UDP
-     */
-    Err(_("%s: Send to (UDP) returned %d when writing %u"), desctask(t), rv, (unsigned int)t->replylen);
-  }
+	if (rv != (int)t->replylen) {
+		/*
+		* This should never ever happen as we have sent a partial packet over UDP
+		*/
+		Err(_("%s: Send to (UDP) returned %d when writing %u"), desctask(t), rv, (unsigned int)t->replylen);
+	}
 
 #if DEBUG_ENABLED && DEBUG_UDP
-  DebugX("udp", 1, _("%s: WRITE %u UDP octets (id %u)"), desctask(t), (unsigned int)t->replylen, t->id);
+	DebugX("udp", 1, _("%s: WRITE %u UDP octets (id %u)"), desctask(t), (unsigned int)t->replylen, t->id);
 #endif
-  return (TASK_COMPLETED);
+	return (TASK_COMPLETED);
 }
 /*--- write_udp_reply() -------------------------------------------------------------------------*/
+
 static taskexec_t
 udp_tick(TASK *t, void *data) {
-
-  t->timeout = current_time + task_timeout;
-
-  return TASK_CONTINUE;
+	t->timeout = current_time + task_timeout;
+	return TASK_CONTINUE;
 }
 
 static taskexec_t
 udp_read_message(TASK *t, void *data) {
-  taskexec_t	res;
+	taskexec_t	res;
 
-  while((res = read_udp_query(t->fd, t->family)) != TASK_CONTINUE) continue;
+	while ((res = read_udp_query(t->fd, t->family)) != TASK_CONTINUE) { continue; }
 
-  t->timeout = current_time + task_timeout;
+	t->timeout = current_time + task_timeout;
 
-  return TASK_CONTINUE;
+	return TASK_CONTINUE;
 }
 
 void
 udp_start() {
-  int		n = 0;
+	int		n = 0;
 
-  for (n = 0; n < num_udp4_fd; n++) {
-    TASK *udptask = IOtask_init(HIGH_PRIORITY_TASK, NEED_TASK_READ,
-				udp4_fd[n], SOCK_DGRAM, AF_INET, NULL);
-    task_add_extension(udptask, NULL, NULL, udp_read_message, udp_tick);
-  }
+	for (n = 0; n < num_udp4_fd; n++) {
+		TASK *udptask = IOtask_init(HIGH_PRIORITY_TASK, NEED_TASK_READ,
+			udp4_fd[n], SOCK_DGRAM, AF_INET, NULL);
+		task_add_extension(udptask, NULL, NULL, udp_read_message, udp_tick);
+	}
 #if HAVE_IPV6
-  for (n = 0; n < num_udp6_fd; n++) {
-    TASK *udptask = IOtask_init(HIGH_PRIORITY_TASK, NEED_TASK_READ,
-				udp6_fd[n], SOCK_DGRAM, AF_INET6, NULL);
-    task_add_extension(udptask, NULL, NULL, udp_read_message, udp_tick);
-  }
+	for (n = 0; n < num_udp6_fd; n++) {
+		TASK *udptask = IOtask_init(HIGH_PRIORITY_TASK, NEED_TASK_READ,
+			udp6_fd[n], SOCK_DGRAM, AF_INET6, NULL);
+		task_add_extension(udptask, NULL, NULL, udp_read_message, udp_tick);
+	}
 #endif
 }
-
-/* vi:set ts=3: */
-/* NEED_PO */
