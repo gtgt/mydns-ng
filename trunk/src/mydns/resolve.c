@@ -95,8 +95,9 @@ resolve_soa(TASK *t, datasection_t section, char *fqdn, int level) {
 **************************************************************************************************/
 static taskexec_t
 cname_recurse(TASK *t, datasection_t section, dns_qtype_t qtype,
-	      char *fqdn, MYDNS_RR *cname, int level) {
-  register int n = 0;
+	char *fqdn, MYDNS_RR *cname, int level
+) {
+	register int n = 0;
 
   if (level >= MAX_CNAME_LEVEL)
     return (1);
@@ -138,31 +139,35 @@ cname_recurse(TASK *t, datasection_t section, dns_qtype_t qtype,
 **************************************************************************************************/
 static taskexec_t
 process_rr(TASK *t, datasection_t section, dns_qtype_t qtype, char *fqdn,
-	   MYDNS_SOA *soa, char *label, MYDNS_RR *rr, int level) {
-  register MYDNS_RR *r = NULL;
-  register int rv = 0;
-  register int add_ns = (section == ANSWER
-			 && !t->ns.size
-			 && qtype != DNS_QTYPE_NS
-			 && qtype != DNS_QTYPE_ANY);
+	MYDNS_SOA *soa, char *label, MYDNS_RR *rr, int level
+) {
+	register MYDNS_RR *r = NULL;
+	register int rv = 0;
+	register int add_ns = (section == ANSWER
+				&& !t->ns.size
+				&& qtype != DNS_QTYPE_NS
+				&& qtype != DNS_QTYPE_ANY);
 
-  t->name_ok = 1;
+	t->name_ok = 1;
 
-  /* If the data section calls for a FQDN, and we just get a hostname, append the origin */
-  for (r = rr; r; r = r->next) {
-    if (r->type == DNS_QTYPE_NS || r->type == DNS_QTYPE_CNAME || r->type == DNS_QTYPE_MX) {
-      mydns_rr_data_append_origin(r, soa->origin);
-    }
-  }
+	/* If the data section calls for a FQDN, and we just get a hostname, append the origin */
+	for (r = rr; r; r = r->next) {
+		if (r->type == DNS_QTYPE_NS || r->type == DNS_QTYPE_CNAME || r->type == DNS_QTYPE_MX) {
+			mydns_rr_data_append_origin(r, soa->origin);
+		}
+	}
 
-  /* If the RR list returned contains a CNAME record, follow the CNAME. */
-  for (r = rr; r; r = r->next)
-    if (r->type == DNS_QTYPE_CNAME)
-      return cname_recurse(t, section, qtype, fqdn, r, level);
+	/* If the RR list returned contains a CNAME record, follow the CNAME. */
+	for (r = rr; r; r = r->next) {
+		if (r->type == DNS_QTYPE_CNAME) {
+			return cname_recurse(t, section, qtype, fqdn, r, level);
+		}
+	}
 
-  /* Find RRs matching QTYPE */
-  for (r = rr; r; r = r->next)
-    if (r->type == qtype || qtype == DNS_QTYPE_ANY) {
+	/* Find RRs matching QTYPE */
+	for (r = rr; r; r = r->next) {
+		if (r->type == qtype || qtype == DNS_QTYPE_ANY) {
+
 #if ALIAS_ENABLED
       /* If the RR is an ALIAS then follow it, otherwise just add it. */
       if (r->alias)
@@ -288,11 +293,12 @@ add_authority_ns(TASK *t, datasection_t section, MYDNS_SOA *soa, char *match_lab
 **************************************************************************************************/
 static taskexec_t
 resolve_label(TASK *t, datasection_t section, dns_qtype_t qtype,
-	      char *fqdn, MYDNS_SOA *soa, char *label, int level) {
-  register MYDNS_RR	*rr = NULL;
-  taskexec_t		rv = 0;
-  int			recurs = wildcard_recursion;
-  char                  *savelabel = label;
+	char *fqdn, MYDNS_SOA *soa, char *label, int level
+) {
+	register MYDNS_RR	*rr = NULL;
+	taskexec_t		rv = 0;
+	int			recurs = wildcard_recursion;
+	char                  *savelabel = label;
 
 #if DEBUG_ENABLED && DEBUG_RESOLVE
   DebugX("resolve", 1, _("%s: resolve_label(%s, %s, %s, %s, %d)"), desctask(t),
