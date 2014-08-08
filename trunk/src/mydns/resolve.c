@@ -101,8 +101,8 @@ resolve_soa(TASK *t, datasection_t section, char *fqdn, int level) {
 **************************************************************************************************/
 static taskexec_t
 cname_recurse(TASK *t, datasection_t section, dns_qtype_t qtype,
-	char *fqdn, MYDNS_RR *cname, int level)
-{
+	char *fqdn, MYDNS_RR *cname, int level
+) {
 	register int n = 0;
 
 	if (level >= MAX_CNAME_LEVEL) {
@@ -149,8 +149,8 @@ cname_recurse(TASK *t, datasection_t section, dns_qtype_t qtype,
 **************************************************************************************************/
 static taskexec_t
 process_rr(TASK *t, datasection_t section, dns_qtype_t qtype, char *fqdn,
-	MYDNS_SOA *soa, char *label, MYDNS_RR *rr, int level)
-{
+	MYDNS_SOA *soa, char *label, MYDNS_RR *rr, int level
+) {
 	register MYDNS_RR *r = NULL;
 	register int rv = 0;
 	register int add_ns = (section == ANSWER
@@ -310,8 +310,8 @@ add_authority_ns(TASK *t, datasection_t section, MYDNS_SOA *soa, char *match_lab
 **************************************************************************************************/
 static taskexec_t
 resolve_label(TASK *t, datasection_t section, dns_qtype_t qtype,
-	char *fqdn, MYDNS_SOA *soa, char *label, int level)
-{
+	char *fqdn, MYDNS_SOA *soa, char *label, int level
+) {
 	register MYDNS_RR	*rr = NULL;
 	taskexec_t		rv = 0;
 	int			recurs = wildcard_recursion;
