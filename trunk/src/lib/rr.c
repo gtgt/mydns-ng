@@ -194,6 +194,11 @@ mydns_rr_get_type(char *type) {
     if (type[1] == 'A' && type[2] == 'P' && type[3] == 'T' && type[4] == 'R' && !type[5])
       return DNS_QTYPE_NAPTR;
     break;
+  case 'O':
+	if (type[1] == 'P' && type[2] == 'T' && !type[3]) {
+		return DNS_QTYPE_OPT;
+	}
+	break;
 
   case 'T':
     if (type[1] == 'X' && type[2] == 'T' && !type[3])
@@ -325,6 +330,55 @@ mydns_rr_parse_naptr(const char *origin, MYDNS_RR *rr) {
   return 0;
 }
 /*--- mydns_rr_parse_naptr() --------------------------------------------------------------------*/
+
+/**************************************************************************************************
+ *	MYDNS_RR_PARSE_OPT
+ * 
+ * TTL field stores
+ * 		8 bits of EXT-RCODE
+ * 		8 bits of VERSION
+ * 		16 bits of FLAGS
+ * 
+ * RDATA field stores variable length count of key|value pairs each with
+ * 		OPTION-CODE: 	16 bits of OPTCODE
+ * 		OPTION-LENGTH:	16 bits of LENGTH
+ * 		OPTION-DATA: 	bitmask, variable (OPTION-LENGTH) length amount of data
+ * 
+ * 		NOTE:	RDATA MAXLENGTH == rr->len having no cap on max elements
+ * 				OPTION-CODE values not understood shall be silently ignored.
+ * 
+ * OPT is never cachable
+ * OPT is never 'definable' by RECORD types in database, its a server-level options
+ * OPT has a maximum of "1" (one) OPT record per REQUEST and REPLY, if more are found, must return "FORMERR"
+ * 
+ **************************************************************************************************/
+static inline int
+mydns_rr_parse_opt(const char *origin, MYDNS_RR *rr) {
+	char *weight, *port, *target;
+	
+	/* Clamp 'aux' if necessary */
+	if (rr->aux > 65535)
+		rr->aux = 65535;
+	
+	/* Parse weight (into srv_weight), port (into srv_port), and target */
+	/*
+	target = __MYDNS_RR_DATA_VALUE(rr);
+	if ((weight = strsep(&target, " \t"))) {
+		__MYDNS_RR_SRV_WEIGHT(rr) = atoi(weight);
+		if ((port = strsep(&target, " \t")))
+			__MYDNS_RR_SRV_PORT(rr) = atoi(port);
+	*/	
+		/* Strip the leading data off and just hold target */
+/*		memmove(__MYDNS_RR_DATA_VALUE(rr), target, strlen(target)+1);
+		__MYDNS_RR_DATA_LENGTH(rr) = strlen(__MYDNS_RR_DATA_VALUE(rr));
+		__MYDNS_RR_DATA_VALUE(rr) = REALLOCATE(__MYDNS_RR_DATA_VALUE(rr),
+											   __MYDNS_RR_DATA_LENGTH(rr) + 1,
+											   char[]);
+	}
+	*/
+}
+/*--- mydns_rr_parse_opt() ----------------------------------------------------------------------*/
+
 
 static inline int
 mydns_rr_parse_txt(const char *origin, MYDNS_RR *rr) {
@@ -491,6 +545,11 @@ mydns_rr_build(uint32_t id,
       goto PARSEFAILED;
     }
     break;
+  case DNS_QTYPE_OPT:
+	  if (mydns_rr_parse_opt(origin, rr) < 0) {
+		  goto PARSEFAILED;
+	  }
+	  break;
 
   case DNS_QTYPE_NAPTR:
     /* Populate special fields for NAPTR records */
@@ -507,9 +566,11 @@ mydns_rr_build(uint32_t id,
   case DNS_QTYPE_SRV:
     mydns_rr_parse_srv(origin, rr);
     goto DOORIGIN;
+	
 
   DOORIGIN:
 
+	  
   case DNS_QTYPE_CNAME:
   case DNS_QTYPE_MX:
   case DNS_QTYPE_NS:
