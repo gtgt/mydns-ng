@@ -47,7 +47,7 @@
 	(src) = t_src;	 \
 }
 
-/* Copy value of uint32_t `n' into `dest'; Move `dest' forward to next offset */
+/* Copy value of uint32_t `n' into `src'; Move `src' forward to next offset */
 #define DNS_GET32(n, src) { \
 	register uchar *t_src = (uchar *)(src); \
 	(n) = ((uint32_t)t_src[0] << 24) \
