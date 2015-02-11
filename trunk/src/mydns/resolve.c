@@ -169,18 +169,19 @@ process_rr(TASK *t, datasection_t section, dns_qtype_t qtype, char *fqdn,
 		if (r->type == qtype || qtype == DNS_QTYPE_ANY) {
 
 #if ALIAS_ENABLED
-		/* If the RR is an ALIAS then follow it, otherwise just add it. */
-		if (r->alias)
-			rv += alias_recurse(t, section, fqdn, soa, label, r);
-		else {
-			rrlist_add(t, section, DNS_RRTYPE_RR, (void *)r, fqdn);
-			rv++;
-		}
+			/* If the RR is an ALIAS then follow it, otherwise just add it. */
+			if (r->alias) {
+				rv += alias_recurse(t, section, fqdn, soa, label, r);
+			} else {
+				rrlist_add(t, section, DNS_RRTYPE_RR, (void *)r, fqdn);
+				rv++;
+			}
 #else
 			rrlist_add(t, section, DNS_RRTYPE_RR, (void *)r, fqdn);
 			rv++;
 #endif
-    	}
+
+		}
 	}
 	t->sort_level++;
 
