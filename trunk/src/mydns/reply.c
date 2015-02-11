@@ -560,6 +560,38 @@ reply_add_txt(TASK *t, RR *r) {
 }
 /*--- reply_add_txt() ---------------------------------------------------------------------------*/
 
+/**************************************************************************************************
+ *	REPLY_ADD_OPT
+ *	Adds a OPT record to the reply.
+ *	Returns the numeric offset of the start of this record within the reply, or -1 on error.
+ **************************************************************************************************/
+static inline int
+reply_add_opt(TASK *t, RR *r) {
+	char		*dest = NULL;
+	size_t	size = 0;
+	size_t	len = 0;
+	MYDNS_RR	*rr = (MYDNS_RR *)r->rr;
+/*
+	len = MYDNS_RR_DATA_LENGTH(rr);
+	
+	if (reply_start_rr(t, r, (char*)r->name, DNS_QTYPE_TXT, rr->ttl, "TXT") < 0)
+		return (-1);
+	
+	size = len + 1;
+	r->length += SIZE16 + size;
+	
+	if (!(dest = rdata_enlarge(t, SIZE16 + size)))
+		return dnserror(t, DNS_RCODE_SERVFAIL, ERR_INTERNAL);
+	
+	DNS_PUT16(dest, size);
+	*dest++ = len;
+	memcpy(dest, MYDNS_RR_DATA_VALUE(rr), len);
+	dest += len;
+	*/
+	return (0);
+}
+/*--- reply_add_opt() ---------------------------------------------------------------------------*/
+
 
 /**************************************************************************************************
 	REPLY_PROCESS_RRLIST
@@ -798,10 +830,10 @@ reply_process_rrlist(TASK *t, RRLIST *rrlist) {
 	  break;
 
 	case DNS_QTYPE_OPT:
-	  Warnx("%s: %s: %s", desctask(t), mydns_qtype_str(rr->type),
-		_("unsupported resource record type"));
-	  break;
-
+		if (reply_add_opt(t, r) < 0)
+			return (-1);
+		break;
+		
 	case DNS_QTYPE_APL:
 	  Warnx("%s: %s: %s", desctask(t), mydns_qtype_str(rr->type),
 		_("unsupported resource record type"));
