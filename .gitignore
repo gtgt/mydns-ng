@@ -36,3 +36,6 @@ stamp-vti
 *.tar.gz
 texinfo.tex
 version.texi
+po/stamp-po
+mkinstalldirs
+compile

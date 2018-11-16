@@ -494,6 +494,7 @@ check_rr(void) {
   EXPAND_DATA(name);
   switch (rr->type) {
   case DNS_QTYPE_TXT:
+  case DNS_QTYPE_CAA:
   case DNS_QTYPE_SRV:
     check_name(name, "rr.name", 1, 1);
     break;
@@ -572,6 +573,9 @@ check_rr(void) {
     /* TODO */
     break;
 
+  case DNS_QTYPE_CAA:							/* Data: CA info */
+    /* TODO */
+    break;
   case DNS_QTYPE_TXT:							/* Data: Undefined text string */
     /*
      * Data length must be less than DNS_MAXTXTLEN

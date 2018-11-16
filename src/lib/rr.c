@@ -174,6 +174,9 @@ mydns_rr_get_type(char *type) {
     break;
 
   case 'C':
+    if (type[1] == 'A' && type[2] == 'A' && !type[3])
+      return DNS_QTYPE_CAA;
+    break;
     if (type[1] == 'N' && type[2] == 'A' && type[3] == 'M' && type[4] == 'E' && !type[5])
       return DNS_QTYPE_CNAME;
     break;
@@ -343,6 +346,23 @@ mydns_rr_parse_txt(const char *origin, MYDNS_RR *rr) {
   return 0;
 }
 
+static inline int
+mydns_rr_parse_caa(const char *origin, MYDNS_RR *rr) {
+  int datalen = __MYDNS_RR_DATA_LENGTH(rr);
+  char *data = __MYDNS_RR_DATA_VALUE(rr);
+
+  if (datalen > DNS_MAXTXTLEN) return (-1);
+
+  while (datalen > 0) {
+    size_t elemlen = strlen(data);
+    if (elemlen > DNS_MAXTXTELEMLEN) return (-1);
+    data = &data[elemlen+1];
+    datalen -= elemlen + 1;
+  }
+
+  return 0;
+}
+
 static char *
 __mydns_rr_append(char *s1, char *s2) {
   int s1len = strlen(s1);
@@ -488,6 +508,12 @@ mydns_rr_build(uint32_t id,
 
   case DNS_QTYPE_TXT:
     if (mydns_rr_parse_txt(origin, rr) < 0) {
+      goto PARSEFAILED;
+    }
+    break;
+
+  case DNS_QTYPE_CAA:
+    if (mydns_rr_parse_caa(origin, rr) < 0) {
       goto PARSEFAILED;
     }
     break;

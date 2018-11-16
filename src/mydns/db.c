@@ -148,7 +148,7 @@ db_output_create_tables(void) {
   printf("OR type='ALIAS' ");
 #endif
   printf("OR type='CNAME' OR type='HINFO' OR type='MX' OR type='NAPTR' OR type='NS' ");
-  printf("OR type='PTR' OR type='RP' OR type='SRV' OR type='TXT'),\n");
+  printf("OR type='PTR' OR type='RP' OR type='SRV' OR type='TXT' OR type='CAA'),\n");
   if (mydns_rr_extended_data) {
     printf("  edata      BYTEA DEFAULT NULL,\n");
     printf("  edatakey   CHAR(32) DEFAULT NULL,\n");
@@ -181,7 +181,7 @@ db_output_create_tables(void) {
 #if ALIAS_ENABLED
   printf("'ALIAS',");
 #endif
-  printf("'CNAME','HINFO','MX','NAPTR','NS','PTR','RP','SRV','TXT'),\n");
+  printf("'CNAME','HINFO','MX','NAPTR','NS','PTR','RP','SRV','TXT','CAA'),\n");
   if (mydns_rr_extended_data) {
     printf("  edata      BLOB(65408) DEFAULT NULL,\n");
     printf("  edatakey   CHAR(32) DEFAULT NULL,\n");

@@ -72,6 +72,7 @@ mydns_qtype_str(dns_qtype_t qtype) {
   case DNS_QTYPE_MINFO:		return ("MINFO");
   case DNS_QTYPE_MX:		return ("MX");
   case DNS_QTYPE_TXT:		return ("TXT");
+  case DNS_QTYPE_CAA:		return ("CAA");
   case DNS_QTYPE_RP:		return ("RP");
   case DNS_QTYPE_AFSDB:		return ("AFSDB");
   case DNS_QTYPE_X25:		return ("X25");

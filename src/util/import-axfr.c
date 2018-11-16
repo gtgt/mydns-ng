@@ -404,6 +404,19 @@ process_axfr_answer(uchar *reply, size_t replylen, uchar *src) {
     }
     break;
 
+  case DNS_QTYPE_CAA:
+    {
+      size_t len = *src++;
+
+      data = ALLOCATE(len + 1, char[]);
+      memcpy(data, src, len);
+      data[len] = '\0';
+      src += len;
+      import_rr(shortname(name, 1), (uchar*)"CAA", data, len, 0, ttl);
+      RELEASE(data);
+    }
+    break;
+
   default:
     Warnx("%s %s: %s", name, mydns_qtype_str(type), _("discarding unsupported RR type"));
     break;

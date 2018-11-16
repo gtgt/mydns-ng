@@ -596,6 +596,14 @@ update_get_rr_data(TASK *t, UQRR *rr, char **data, size_t *datalen,
     }
     break;
 
+  case DNS_QTYPE_CAA:
+    *data = text_retrieve(&src, end, datalen, 0);
+    if (*datalen > DNS_MAXTXTLEN) {
+      RELEASE(*data);
+      return dnserror(t, DNS_RCODE_FORMERR, ERR_INVALID_DATA);
+    }
+    break;
+
   case DNS_QTYPE_RP: {
     char *data1, *data2;
 
@@ -1171,6 +1179,7 @@ update_rrtype_ok(dns_qtype_t type) {
   case DNS_QTYPE_MX:
   case DNS_QTYPE_NS:
   case DNS_QTYPE_TXT:
+  case DNS_QTYPE_CAA:
   case DNS_QTYPE_PTR:
   case DNS_QTYPE_RP:
   case DNS_QTYPE_SRV:

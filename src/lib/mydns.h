@@ -337,6 +337,7 @@ typedef enum							/* Query types */
 	DNS_QTYPE_MAILB			= 253,			/* Transfer mailbox records */
 	DNS_QTYPE_MAILA			= 254,			/* Transfer mail agent records */
 	DNS_QTYPE_ANY			= 255,			/* Any */
+	DNS_QTYPE_CAA			= 257,
 
 	DNS_QTYPE_TA			= 32768,
 	DNS_QTYPE_DLV			= 32769,
