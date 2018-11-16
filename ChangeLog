@@ -1,5 +1,6 @@
 1.2.8.32
 - add support for fedora systemd
+- add support for CAA record
 
 1.2.8.31
 - fix various php issues with admin.php

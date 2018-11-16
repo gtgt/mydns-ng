@@ -253,7 +253,7 @@ bind_dump_rr(MYDNS_SOA *soa, MYDNS_RR *rr, int maxlen) {
 	   (char*)MYDNS_RR_DATA_VALUE(rr));
   else if (rr->type == DNS_QTYPE_RP)
     printf("%s %s\n", (char*)MYDNS_RR_DATA_VALUE(rr), MYDNS_RR_RP_TXT(rr));
-  else if (rr->type == DNS_QTYPE_TXT || rr->type == DNS_QTYPE_CAA) {
+  else if (rr->type == DNS_QTYPE_TXT) {
     register unsigned char *c;
     unsigned int length = MYDNS_RR_DATA_LENGTH(rr);
     putc('"', stdout);
